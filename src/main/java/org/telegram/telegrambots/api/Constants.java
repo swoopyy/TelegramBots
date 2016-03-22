@@ -8,5 +8,6 @@ package org.telegram.telegrambots.api;
  */
 public class Constants {
     public static final String BASEURL = "https://api.telegram.org/bot";
+    public static final String DOWNLOADFILEURL = "https://api.telegram.org/file/bot";
     public static final int SOCKET_TIMEOUT = 30 * 1000;
 }

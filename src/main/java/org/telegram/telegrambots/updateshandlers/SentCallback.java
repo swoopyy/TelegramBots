@@ -2,6 +2,7 @@ package org.telegram.telegrambots.updateshandlers;
 
 import org.json.JSONObject;
 import org.telegram.telegrambots.api.methods.BotApiMethod;
+import org.telegram.telegrambots.api.objects.File;
 
 import java.io.Serializable;
 
@@ -18,6 +19,7 @@ public interface SentCallback<T extends Serializable> {
      * @param jsonObject Answer from Telegram server
      */
     void onResult(BotApiMethod<T> method, JSONObject jsonObject);
+
 
     /**
      * Called when the request fails

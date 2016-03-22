@@ -4,6 +4,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.BufferedHttpEntity;
@@ -26,6 +27,7 @@ import org.telegram.telegrambots.api.objects.UserProfilePhotos;
 import org.telegram.telegrambots.updateshandlers.SentCallback;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -176,6 +178,21 @@ public abstract class AbsSender {
 
         GetMe getMe = new GetMe();
         sendApiMethodAsync(getMe, sentCallback);
+    }
+
+    public File getFile(GetFile getFile) throws TelegramApiException{
+        if(getFile == null){
+            throw new TelegramApiException("Parameter getFile can not be null");
+        }
+
+        return (File)sendApiMethod(getFile);
+    }
+
+    public byte[] downloadFile(File file) throws TelegramApiException{
+        if(file == null){
+            throw new TelegramApiException("Parameter download file can not be null");
+        }
+        return sendApiMethodForFile(file);
     }
 
     public Message sendDocument(SendDocument sendDocument) throws TelegramApiException {
@@ -438,7 +455,28 @@ public abstract class AbsSender {
         return method.deserializeResponse(jsonObject);
     }
 
+    private byte[] sendApiMethodForFile(File file) throws TelegramApiException{
+        try {
+            CloseableHttpClient httpclient = HttpClientBuilder.create().setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
+            String url = getFileUrl() + file.getFilePath();
+            HttpGet httpget = new HttpGet(url);
+            CloseableHttpResponse response = httpclient.execute(httpget);
+            HttpEntity ht = response.getEntity();
+            BufferedHttpEntity buf = new BufferedHttpEntity(ht);
+            InputStream input = buf.getContent();
+            byte[] outArray = new byte[input.available()];
+            input.read(outArray);
+            return outArray;
+        } catch (IOException e) {
+            throw new TelegramApiException("Unable to download file from" + file.getFilePath() + " path", e);
+        }
+    }
+
     private String getBaseUrl() {
         return Constants.BASEURL + getBotToken() + "/";
+    }
+
+    private String getFileUrl(){
+        return Constants.DOWNLOADFILEURL + getBotToken() +"/";
     }
 }
