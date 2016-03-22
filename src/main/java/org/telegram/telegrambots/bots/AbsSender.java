@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * @author Ruben Bermudez
@@ -472,6 +473,25 @@ public abstract class AbsSender {
         }
     }
 
+
+    private Future<byte[]> sendApiMethodForFileAsync(File file) throws TelegramApiException{
+       return exe.submit(() -> {
+            try {
+                CloseableHttpClient httpclient = HttpClientBuilder.create().setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
+                String url = getFileUrl() + file.getFilePath();
+                HttpGet httpget = new HttpGet(url);
+                CloseableHttpResponse response = httpclient.execute(httpget);
+                HttpEntity ht = response.getEntity();
+                BufferedHttpEntity buf = new BufferedHttpEntity(ht);
+                InputStream input = buf.getContent();
+                byte[] outArray = new byte[input.available()];
+                input.read(outArray);
+                return outArray;
+            } catch (IOException e) {
+                throw new TelegramApiException("Unable to download file from" + file.getFilePath() + " path", e);
+            }
+        });
+    }
     private String getBaseUrl() {
         return Constants.BASEURL + getBotToken() + "/";
     }
